@@ -10,6 +10,7 @@ import Progress from "./components/Progress";
 import FinishedScreen from "./components/FinishedScreen";
 import Timer from "./components/Timer";
 import Footer from "./components/Footer";
+import PreviousButton from "./components/PreviousButton";
 
 const SECS_PER_QUESTION = 15;
 
@@ -20,14 +21,26 @@ const initialState = {
   status: "loading",
   index: 0,
   answer: null,
+  answers: null,
+  filter: "default",
   points: 0,
   highscore: 0,
   secondsRemaining: null,
 };
 
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case "dataRecieved":
+      initialState.questions = action.payload;
+      initialState.answers = Array(action.payload.length).fill(null);
       return {
         ...state,
         questions: action.payload,
@@ -52,7 +65,9 @@ function reducer(state, action) {
 
       return {
         ...state,
-        answer: action.payload,
+        answers: state.answers.map((answer, i) =>
+          i === state.index ? action.payload : answer
+        ),
         points:
           action.payload === question.correctOption
             ? state.points + question.points
@@ -63,7 +78,12 @@ function reducer(state, action) {
       return {
         ...state,
         index: state.index + 1,
-        answer: null,
+      };
+
+    case "previousQuestion":
+      return {
+        ...state,
+        index: state.index - 1,
       };
 
     case "finished":
@@ -77,7 +97,6 @@ function reducer(state, action) {
     case "restart":
       return {
         ...initialState,
-        questions: state.questions,
         highscore: state.highscore,
         status: "ready",
       };
@@ -92,6 +111,68 @@ function reducer(state, action) {
             ? Math.max(state.highscore, state.points)
             : state.highscore,
       };
+
+    case "filter":
+      let newQuestions = [];
+      switch (action.payload) {
+        case "default":
+          newQuestions = shuffleArray(initialState.questions);
+          return {
+            ...state,
+            questions: newQuestions,
+            filter: "default",
+            answers: Array(newQuestions.length).fill(null),
+          };
+        case "random5":
+          newQuestions = shuffleArray(initialState.questions).slice(0, 5);
+          return {
+            ...state,
+            questions: newQuestions,
+            filter: "random5",
+            answers: Array(newQuestions.length).fill(null),
+          };
+        case "random10":
+          newQuestions = shuffleArray(initialState.questions).slice(0, 10);
+          return {
+            ...state,
+            questions: newQuestions,
+            filter: "random10",
+            answers: Array(newQuestions.length).fill(null),
+          };
+        case "easy":
+          newQuestions = shuffleArray(
+            initialState.questions.filter((question) => question.points <= 10)
+          );
+          return {
+            ...state,
+            questions: newQuestions,
+            filter: "easy",
+            answers: Array(newQuestions.length).fill(null),
+          };
+        case "medium":
+          newQuestions = shuffleArray(
+            initialState.questions.filter((question) => question.points <= 20)
+          );
+          return {
+            ...state,
+            questions: newQuestions,
+            filter: "medium",
+            answers: Array(newQuestions.length).fill(null),
+          };
+        case "hard":
+          newQuestions = shuffleArray(
+            initialState.questions.filter((question) => question.points <= 30)
+          );
+          return {
+            ...state,
+            questions: newQuestions,
+            filter: "hard",
+            answers: Array(newQuestions.length).fill(null),
+          };
+        default:
+          throw new Error("Unknown filter");
+      }
+
     default:
       throw new Error("Unknown action");
   }
@@ -99,7 +180,7 @@ function reducer(state, action) {
 
 function App() {
   const [
-    { questions, status, index, answer, points, highscore, secondsRemaining },
+    { questions, status, index, answers, points, highscore, secondsRemaining },
     dispatch,
   ] = useReducer(reducer, initialState);
 
@@ -139,22 +220,21 @@ function App() {
               numQuestions={numQuestions}
               points={points}
               maxPoints={maxPoints}
-              answer={answer}
+              answer={answers.at(index)}
             />
             <Question
               question={questions.at(index)}
               dispatch={dispatch}
-              answer={answer}
+              answer={answers.at(index)}
             />
             <Footer>
               <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
-              {answer !== null && (
-                <NextButton
-                  dispatch={dispatch}
-                  index={index}
-                  numQuestions={numQuestions}
-                />
-              )}
+              <NextButton
+                dispatch={dispatch}
+                index={index}
+                numQuestions={numQuestions}
+              />
+              <PreviousButton dispatch={dispatch} index={index} />
             </Footer>
           </>
         )}

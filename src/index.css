@@ -126,6 +126,7 @@ progress {
   cursor: pointer;
   border-radius: 100px;
   transition: 0.3s;
+  margin-left: 10px;
 }
 
 .btn:not([disabled]):hover {
@@ -141,6 +142,19 @@ progress {
 }
 
 .btn-ui {
+  float: right;
+}
+
+.filter {
+  display: block;
+  font-family: inherit;
+  color: inherit;
+  font-size: 2rem;
+  /* border: 2px solid var(--color-dark);
+  background-color: var(--color-dark); */
+  padding: 1.2rem 2.4rem;
+  /* cursor: pointer;
+  border-radius: 100px; */
   float: right;
 }
 
