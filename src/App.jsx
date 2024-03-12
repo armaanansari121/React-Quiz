@@ -193,7 +193,9 @@ function App() {
   useEffect(function () {
     async function fetchQuestions() {
       try {
-        const res = await fetch("http://localhost:5000/questions");
+        const res = await fetch(
+          "https://my-json-server.typicode.com/armaanansari121/React-Quiz/questions/"
+        );
         const data = await res.json();
         dispatch({ type: "dataRecieved", payload: data });
       } catch (err) {
